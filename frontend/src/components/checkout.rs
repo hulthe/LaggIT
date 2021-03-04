@@ -3,6 +3,7 @@ use crate::components::parsed_input::{ParsedInput, ParsedInputMsg};
 use crate::generated::css_classes::C;
 use crate::strings;
 use crate::util::simple_ev;
+use seed::app::cmds::timeout;
 use seed::prelude::*;
 use seed::*;
 use std::collections::HashMap;
@@ -13,6 +14,8 @@ use strecklistan_api::{
     inventory::{InventoryBundleId, InventoryItemId, InventoryItemStock as InventoryItem},
     transaction::{NewTransaction, TransactionBundle, TransactionId},
 };
+
+const SUCCESS_ANIMATION_TIMEOUT: u32 = 1240;
 
 #[derive(Clone, Debug)]
 pub enum CheckoutMsg {
@@ -34,6 +37,8 @@ pub enum CheckoutMsg {
         bundle_index: usize,
         change: i32,
     },
+
+    AnimationFinished,
 }
 
 #[derive(Clone)]
@@ -41,6 +46,7 @@ pub struct Checkout {
     transaction: NewTransaction,
     transaction_total_input: ParsedInput<Currency>,
     override_transaction_total: bool,
+    show_success_animation: bool,
     pub confirm_button_message: Option<&'static str>,
 }
 
@@ -59,6 +65,7 @@ impl Checkout {
                 .with_input_kind("text"),
             override_transaction_total: false,
             confirm_button_message: None,
+            show_success_animation: false,
         }
     }
 
@@ -70,6 +77,14 @@ impl Checkout {
     ) {
         match msg {
             CheckoutMsg::ConfirmPurchase => {
+                self.show_success_animation = true;
+
+                orders.perform_cmd(timeout(SUCCESS_ANIMATION_TIMEOUT, move || {
+                    CheckoutMsg::AnimationFinished
+                }));
+            }
+            CheckoutMsg::AnimationFinished => {
+                self.show_success_animation = false;
                 self.remove_cleared_items();
                 global.request_in_progress = true;
                 let msg = self.transaction.clone();
@@ -314,6 +329,17 @@ impl Checkout {
             },
             if let Some(message) = &self.confirm_button_message {
                 div![C![C.wide_button_message], message]
+            } else {
+                empty![]
+            },
+            if self.show_success_animation {
+                div![
+                    class![C.success_gif_container],
+                    img![
+                        class![C.success_gif],
+                        attrs! {At::Src => "/static/success_animation.gif"},
+                    ]
+                ]
             } else {
                 empty![]
             },

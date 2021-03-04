@@ -578,3 +578,25 @@ input[type=number] {
 	border: solid grey;
 }
 
+.success_gif {
+	width: 150px;
+	height: 150px;
+	position: relative;
+	margin: 0 auto;
+	top: 25%;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, .12), 0 2px 4px 0 rgba(0, 0, 0, .08);
+	border-radius: 50%;
+	padding: 0;
+}
+
+.success_gif_container {
+	width: 100%;
+	height: 100%;
+	top: 0;
+	position: absolute;
+	left: 0;
+	padding: 0;
+    z-index: 150;
+	background-color: rgba(0, 0, 0, 0.5);
+}
+
